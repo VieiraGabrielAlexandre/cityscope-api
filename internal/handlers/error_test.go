@@ -5,12 +5,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/VieiraGabrielAlexandre/cityscope-api/internal/contextutil"
 )
 
 func TestWriteError(t *testing.T) {
 	req := httptest.NewRequest("GET", "/test", nil)
 	// Injetar um request ID manual para teste
-	req = req.WithContext(SetRequestID(req.Context(), "test-id"))
+	req = req.WithContext(contextutil.SetRequestID(req.Context(), "test-id"))
 
 	rr := httptest.NewRecorder()
 

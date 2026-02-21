@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"net/http"
 
-	"github.com/VieiraGabrielAlexandre/cityscope-api/internal/handlers"
+	"github.com/VieiraGabrielAlexandre/cityscope-api/internal/contextutil"
 )
 
 func RequestIDMiddleware(next http.Handler) http.Handler {
@@ -15,7 +15,7 @@ func RequestIDMiddleware(next http.Handler) http.Handler {
 			id = generateID()
 		}
 
-		ctx := handlers.SetRequestID(r.Context(), id)
+		ctx := contextutil.SetRequestID(r.Context(), id)
 		w.Header().Set("X-Request-ID", id)
 
 		next.ServeHTTP(w, r.WithContext(ctx))

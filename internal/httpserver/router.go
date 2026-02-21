@@ -19,6 +19,7 @@ func NewRouter(deps RouterDeps) http.Handler {
 
 	// Middleware global
 	handler := RequestIDMiddleware(mux)
+	handler = LoggingMiddleware(handler)
 
 	// Público
 	mux.HandleFunc("/health", deps.Health.Handle)

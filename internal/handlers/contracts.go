@@ -1,21 +1,12 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 
+	"github.com/VieiraGabrielAlexandre/cityscope-api/internal/contextutil"
 	"github.com/VieiraGabrielAlexandre/cityscope-api/internal/ibge"
 )
-
-func SetRequestID(ctx context.Context, id string) context.Context {
-	return context.WithValue(ctx, ctxKeyRequestID, id)
-}
-
-func GetRequestID(ctx context.Context) string {
-	id, _ := ctx.Value(ctxKeyRequestID).(string)
-	return id
-}
 
 type ErrorResponse struct {
 	Error ErrorDetail `json:"error"`
@@ -28,7 +19,7 @@ type ErrorDetail struct {
 }
 
 func WriteError(w http.ResponseWriter, r *http.Request, code string, message string, status int) {
-	requestID, _ := r.Context().Value(ctxKeyRequestID).(string)
+	requestID := contextutil.GetRequestID(r.Context())
 
 	resp := ErrorResponse{
 		Error: ErrorDetail{
@@ -40,10 +31,6 @@ func WriteError(w http.ResponseWriter, r *http.Request, code string, message str
 
 	writeJSON(w, status, resp)
 }
-
-type ctxKey string
-
-const ctxKeyRequestID ctxKey = "request_id"
 
 type AvailabilityError struct {
 	Available bool   `json:"available"`
