@@ -10,10 +10,10 @@ import (
 )
 
 type CitiesHandler struct {
-	ibge *ibge.Client
+	ibge ibge.API
 }
 
-func NewCitiesHandler(ibgeClient *ibge.Client) *CitiesHandler {
+func NewCitiesHandler(ibgeClient ibge.API) *CitiesHandler {
 	return &CitiesHandler{ibge: ibgeClient}
 }
 

@@ -6,20 +6,20 @@ import (
 )
 
 type Config struct {
-	Port              string
-	APIToken          string
-	IBGEBaseURL       string
-	IBGETimeoutSecond int
+	Port                string
+	APIToken            string
+	IBGEBaseURL         string
+	IBGETimeoutSecond   int
+	IBGECacheTTLSeconds int
 }
 
 func Load() Config {
 	cfg := Config{
-		Port:        getEnv("PORT", "8080"),
-		APIToken:    os.Getenv("API_TOKEN"),
-		IBGEBaseURL: getEnv("IBGE_BASE_URL", "https://servicodados.ibge.gov.br/api"),
+		Port:                getEnv("PORT", "8080"),
+		APIToken:            os.Getenv("API_TOKEN"),
+		IBGEBaseURL:         getEnv("IBGE_BASE_URL", "https://servicodados.ibge.gov.br/api"),
+		IBGECacheTTLSeconds: getEnvInt("IBGE_CACHE_TTL_SECONDS", 21600), // 6h
 	}
-
-	cfg.IBGETimeoutSecond = getEnvInt("IBGE_TIMEOUT_SECONDS", 12)
 
 	return cfg
 }

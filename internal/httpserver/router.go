@@ -19,6 +19,8 @@ func NewRouter(deps RouterDeps) http.Handler {
 
 	// Público
 	mux.HandleFunc("/health", deps.Health.Handle)
+	mux.HandleFunc("/docs", DocsUIHandler)
+	mux.HandleFunc("/openapi.json", OpenAPIJSONHandler)
 
 	// Protegido
 	auth := AuthMiddleware(deps.APIToken)

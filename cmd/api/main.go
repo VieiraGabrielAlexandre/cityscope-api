@@ -20,9 +20,11 @@ func main() {
 
 	ibgeClient := ibge.NewClient(cfg.IBGEBaseURL, time.Duration(cfg.IBGETimeoutSecond)*time.Second)
 
+	cached := ibge.NewCachedClient(ibgeClient, time.Duration(cfg.IBGECacheTTLSeconds)*time.Second)
+
 	health := handlers.NewHealthHandler()
-	locations := handlers.NewLocationsHandler(ibgeClient)
-	cities := handlers.NewCitiesHandler(ibgeClient)
+	locations := handlers.NewLocationsHandler(cached)
+	cities := handlers.NewCitiesHandler(cached)
 
 	router := httpserver.NewRouter(httpserver.RouterDeps{
 		APIToken:  cfg.APIToken,

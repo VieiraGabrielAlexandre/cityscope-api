@@ -11,10 +11,10 @@ import (
 )
 
 type LocationsHandler struct {
-	ibge *ibge.Client
+	ibge ibge.API
 }
 
-func NewLocationsHandler(ibgeClient *ibge.Client) *LocationsHandler {
+func NewLocationsHandler(ibgeClient ibge.API) *LocationsHandler {
 	return &LocationsHandler{ibge: ibgeClient}
 }
 
