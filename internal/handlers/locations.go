@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
@@ -24,7 +23,7 @@ func (h *LocationsHandler) ListStates(w http.ResponseWriter, r *http.Request) {
 
 	states, err := h.ibge.ListStates(ctx)
 	if err != nil {
-		http.Error(w, "failed to fetch states", http.StatusBadGateway)
+		WriteError(w, r, "BAD_GATEWAY", "failed to fetch states", http.StatusBadGateway)
 		return
 	}
 
@@ -36,7 +35,7 @@ func (h *LocationsHandler) ListStates(w http.ResponseWriter, r *http.Request) {
 func (h *LocationsHandler) ListMunicipalities(w http.ResponseWriter, r *http.Request) {
 	uf := strings.TrimSpace(r.URL.Query().Get("state"))
 	if uf == "" {
-		http.Error(w, "missing query param: state (e.g. SP)", http.StatusBadRequest)
+		WriteError(w, r, "BAD_REQUEST", "missing query param: state (e.g. SP)", http.StatusBadRequest)
 		return
 	}
 
@@ -47,7 +46,7 @@ func (h *LocationsHandler) ListMunicipalities(w http.ResponseWriter, r *http.Req
 
 	munis, err := h.ibge.ListMunicipalitiesByUF(ctx, uf)
 	if err != nil {
-		http.Error(w, "failed to fetch municipalities", http.StatusBadGateway)
+		WriteError(w, r, "BAD_GATEWAY", "failed to fetch municipalities", http.StatusBadGateway)
 		return
 	}
 
@@ -65,10 +64,4 @@ func (h *LocationsHandler) ListMunicipalities(w http.ResponseWriter, r *http.Req
 	writeJSON(w, http.StatusOK, map[string]any{
 		"data": munis,
 	})
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
 }

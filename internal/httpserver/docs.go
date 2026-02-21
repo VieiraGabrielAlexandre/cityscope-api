@@ -51,6 +51,21 @@ func openAPISpec() map[string]any {
 					"bearerFormat": "JWT",
 				},
 			},
+			"schemas": map[string]any{
+				"Error": map[string]any{
+					"type": "object",
+					"properties": map[string]any{
+						"error": map[string]any{
+							"type": "object",
+							"properties": map[string]any{
+								"code":       map[string]any{"type": "string", "example": "BAD_REQUEST"},
+								"message":    map[string]any{"type": "string", "example": "Invalid parameter"},
+								"request_id": map[string]any{"type": "string", "example": "f1a2b3c4d5e6f7g8"},
+							},
+						},
+					},
+				},
+			},
 		},
 		"security": []any{
 			map[string]any{"bearerAuth": []any{}},
@@ -86,7 +101,14 @@ func openAPISpec() map[string]any {
 								},
 							},
 						},
-						"401": map[string]any{"description": "Unauthorized"},
+						"401": map[string]any{
+							"description": "Unauthorized",
+							"content": map[string]any{
+								"application/json": map[string]any{
+									"schema": map[string]any{"$ref": "#/components/schemas/Error"},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -118,8 +140,22 @@ func openAPISpec() map[string]any {
 								},
 							},
 						},
-						"400": map[string]any{"description": "Parâmetro ausente"},
-						"401": map[string]any{"description": "Unauthorized"},
+						"400": map[string]any{
+							"description": "Parâmetro ausente",
+							"content": map[string]any{
+								"application/json": map[string]any{
+									"schema": map[string]any{"$ref": "#/components/schemas/Error"},
+								},
+							},
+						},
+						"401": map[string]any{
+							"description": "Unauthorized",
+							"content": map[string]any{
+								"application/json": map[string]any{
+									"schema": map[string]any{"$ref": "#/components/schemas/Error"},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -144,9 +180,30 @@ func openAPISpec() map[string]any {
 								},
 							},
 						},
-						"400": map[string]any{"description": "Requisição inválida"},
-						"401": map[string]any{"description": "Unauthorized"},
-						"502": map[string]any{"description": "Falha ao consultar IBGE"},
+						"400": map[string]any{
+							"description": "Requisição inválida",
+							"content": map[string]any{
+								"application/json": map[string]any{
+									"schema": map[string]any{"$ref": "#/components/schemas/Error"},
+								},
+							},
+						},
+						"401": map[string]any{
+							"description": "Unauthorized",
+							"content": map[string]any{
+								"application/json": map[string]any{
+									"schema": map[string]any{"$ref": "#/components/schemas/Error"},
+								},
+							},
+						},
+						"502": map[string]any{
+							"description": "Falha ao consultar IBGE",
+							"content": map[string]any{
+								"application/json": map[string]any{
+									"schema": map[string]any{"$ref": "#/components/schemas/Error"},
+								},
+							},
+						},
 					},
 				},
 			},

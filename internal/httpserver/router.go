@@ -17,6 +17,9 @@ type RouterDeps struct {
 func NewRouter(deps RouterDeps) http.Handler {
 	mux := http.NewServeMux()
 
+	// Middleware global
+	handler := RequestIDMiddleware(mux)
+
 	// Público
 	mux.HandleFunc("/health", deps.Health.Handle)
 	mux.HandleFunc("/docs", DocsUIHandler)
@@ -33,5 +36,5 @@ func NewRouter(deps RouterDeps) http.Handler {
 	// Encapsula o protected no middleware
 	mux.Handle("/v1/", auth(protected))
 
-	return mux
+	return handler
 }

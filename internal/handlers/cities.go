@@ -21,7 +21,7 @@ func NewCitiesHandler(ibgeClient ibge.API) *CitiesHandler {
 func (h *CitiesHandler) GetCitySnapshot(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 	if len(parts) < 3 {
-		http.Error(w, "missing city id in path", http.StatusBadRequest)
+		WriteError(w, r, "BAD_REQUEST", "missing city id in path", http.StatusBadRequest)
 		return
 	}
 	ibgeID := parts[2]
@@ -31,7 +31,7 @@ func (h *CitiesHandler) GetCitySnapshot(w http.ResponseWriter, r *http.Request) 
 
 	m, err := h.ibge.GetMunicipality(ctx, ibgeID)
 	if err != nil {
-		http.Error(w, "failed to fetch city", http.StatusBadGateway)
+		WriteError(w, r, "BAD_GATEWAY", "failed to fetch city", http.StatusBadGateway)
 		return
 	}
 

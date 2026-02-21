@@ -3,6 +3,8 @@ package httpserver
 import (
 	"net/http"
 	"strings"
+
+	"github.com/VieiraGabrielAlexandre/cityscope-api/internal/handlers"
 )
 
 func AuthMiddleware(expectedToken string) func(http.Handler) http.Handler {
@@ -15,19 +17,19 @@ func AuthMiddleware(expectedToken string) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			auth := r.Header.Get("Authorization")
 			if auth == "" {
-				http.Error(w, "missing Authorization header", http.StatusUnauthorized)
+				handlers.WriteError(w, r, "UNAUTHORIZED", "missing Authorization header", http.StatusUnauthorized)
 				return
 			}
 
 			const prefix = "Bearer "
 			if !strings.HasPrefix(auth, prefix) {
-				http.Error(w, "invalid Authorization format (expected Bearer token)", http.StatusUnauthorized)
+				handlers.WriteError(w, r, "UNAUTHORIZED", "invalid Authorization format (expected Bearer token)", http.StatusUnauthorized)
 				return
 			}
 
 			token := strings.TrimSpace(strings.TrimPrefix(auth, prefix))
 			if token != expectedToken {
-				http.Error(w, "invalid token", http.StatusUnauthorized)
+				handlers.WriteError(w, r, "UNAUTHORIZED", "invalid token", http.StatusUnauthorized)
 				return
 			}
 
