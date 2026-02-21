@@ -38,6 +38,8 @@ func (h *CitiesHandler) GetCitySnapshot(w http.ResponseWriter, r *http.Request) 
 	// Agregados: população estimada (last)
 	pop, popErr := h.ibge.GetPopulationEstimateLast(ctx, ibgeID)
 
+	inds, indsErr := h.ibge.GetUrbanIndicators4714Last(ctx, ibgeID)
+
 	area, areaErr := h.ibge.GetTerritorialArea(ctx, ibgeID)
 	if areaErr != nil {
 		// fallback: Cidades e Estados (IBGE)
@@ -58,14 +60,13 @@ func (h *CitiesHandler) GetCitySnapshot(w http.ResponseWriter, r *http.Request) 
 		},
 	}
 
-	// população
-	if popErr == nil && areaErr == nil && area.ValueKm2 > 0 {
-		data["density_per_km2"] = float64(pop.Value) / area.ValueKm2
-	}
-
-	// área
-	if areaErr == nil {
-		data["area_km2"] = area.ValueKm2
+	if indsErr == nil {
+		data["indicators"] = inds
+	} else {
+		data["indicators"] = map[string]any{
+			"available": false,
+			"error":     indsErr.Error(),
+		}
 	}
 
 	// densidade (calculada pelo CityScope)
@@ -81,16 +82,6 @@ func (h *CitiesHandler) GetCitySnapshot(w http.ResponseWriter, r *http.Request) 
 		data["population_estimate"] = map[string]any{
 			"available": false,
 			"error":     popErr.Error(),
-		}
-	}
-
-	// área
-	if areaErr == nil {
-		data["area_km2"] = area.ValueKm2
-	} else {
-		data["area_km2"] = map[string]any{
-			"available": false,
-			"error":     areaErr.Error(),
 		}
 	}
 
