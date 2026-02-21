@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"sort"
-	"strconv"
 	"strings"
 )
 
@@ -38,8 +36,6 @@ func (c *Client) GetUrbanIndicators4714Last(ctx context.Context, municipalityIBG
 		return UrbanIndicators4714{}, fmt.Errorf("empty municipality id")
 	}
 
-	// Uma chamada só com 3 variáveis:
-	// /api/v3/agregados/4714/periodos/last/variaveis/93|6318|614?localidades=N6[3550308]
 	path := "/v3/agregados/4714/periodos/last/variaveis/93|6318|614"
 	q := url.Values{}
 	q.Set("localidades", "N6["+municipalityIBGEID+"]")
@@ -49,32 +45,6 @@ func (c *Client) GetUrbanIndicators4714Last(ctx context.Context, municipalityIBG
 		return UrbanIndicators4714{}, err
 	}
 
-	// extrai (ano, valor) de cada item
-	type pair struct {
-		year int
-		val  string
-	}
-
-	findLast := func(m map[string]string) (pair, bool) {
-		if len(m) == 0 {
-			return pair{}, false
-		}
-		years := make([]int, 0, len(m))
-		for k := range m {
-			y, err := strconv.Atoi(k)
-			if err != nil {
-				continue
-			}
-			years = append(years, y)
-		}
-		if len(years) == 0 {
-			return pair{}, false
-		}
-		sort.Ints(years)
-		last := years[len(years)-1]
-		return pair{year: last, val: m[strconv.Itoa(last)]}, true
-	}
-
 	var out UrbanIndicators4714
 	var havePop, haveArea, haveDen bool
 
@@ -82,52 +52,35 @@ func (c *Client) GetUrbanIndicators4714Last(ctx context.Context, municipalityIBG
 		if len(it.Resultados) == 0 || len(it.Resultados[0].Series) == 0 {
 			continue
 		}
+
 		serie := it.Resultados[0].Series[0].Serie
-		p, ok := findLast(serie)
+		year, raw, ok := lastYear(serie)
 		if !ok {
 			continue
 		}
 
-		// define ano de referência (se vierem diferentes, fica o maior)
-		if p.year > out.ReferenceYear {
-			out.ReferenceYear = p.year
-		}
-
-		raw := strings.TrimSpace(p.val)
-		if raw == "" || raw == "..." {
-			continue
+		if year > out.ReferenceYear {
+			out.ReferenceYear = year
 		}
 
 		switch it.ID {
-		case "93": // População residente (inteiro)
-			// normalmente vem "203080756"
-			rawClean := strings.ReplaceAll(raw, ".", "")
-			rawClean = strings.ReplaceAll(rawClean, ",", "")
-			v, err := strconv.ParseInt(rawClean, 10, 64)
-			if err != nil {
-				continue
+		case "93":
+			if v, ok := parseInt64BR(raw); ok {
+				out.PopulationResident = v
+				havePop = true
 			}
-			out.PopulationResident = v
-			havePop = true
 
-		case "6318": // Área km² (float)
-			// pode vir "8510417.771" (ponto decimal)
-			rawClean := strings.ReplaceAll(raw, ",", ".")
-			v, err := strconv.ParseFloat(rawClean, 64)
-			if err != nil {
-				continue
+		case "6318":
+			if v, ok := parseFloat64Flex(raw); ok {
+				out.AreaKm2 = v
+				haveArea = true
 			}
-			out.AreaKm2 = v
-			haveArea = true
 
-		case "614": // Densidade (float)
-			rawClean := strings.ReplaceAll(raw, ",", ".")
-			v, err := strconv.ParseFloat(rawClean, 64)
-			if err != nil {
-				continue
+		case "614":
+			if v, ok := parseFloat64Flex(raw); ok {
+				out.DensityPerKm2 = v
+				haveDen = true
 			}
-			out.DensityPerKm2 = v
-			haveDen = true
 		}
 	}
 
@@ -135,7 +88,7 @@ func (c *Client) GetUrbanIndicators4714Last(ctx context.Context, municipalityIBG
 		return UrbanIndicators4714{}, fmt.Errorf("no indicators found for municipality %s", municipalityIBGEID)
 	}
 
-	// se densidade não veio (ou veio 0), calcula como fallback se tiver pop+area
+	// fallback: calcula densidade se não veio ou veio 0
 	if (!haveDen || out.DensityPerKm2 == 0) && havePop && haveArea && out.AreaKm2 > 0 {
 		out.DensityPerKm2 = float64(out.PopulationResident) / out.AreaKm2
 	}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"strconv"
 	"strings"
 )
 
@@ -31,31 +30,27 @@ func (c *Client) GetPopulationEstimateLast(ctx context.Context, municipalityIBGE
 
 	var rows []flatRow
 	if err := c.getJSON(ctx, path, q, &rows); err != nil {
+
 		return PopulationEstimate{}, err
 	}
 
 	// Normalmente vem 1 linha quando periodos=last e 1 localidade.
 	for _, r := range rows {
-		v := strings.TrimSpace(r["V"])
-		yearStr := strings.TrimSpace(r["D2C"]) // ano (código)
-		if v == "" || v == "..." || yearStr == "" {
+
+		year, ok := parseYear(r["D2C"])
+		if !ok {
 			continue
 		}
 
-		year, err := strconv.Atoi(yearStr)
-		if err != nil {
+		val, ok := parseInt64BR(r["V"])
+		if !ok {
 			continue
 		}
 
-		// alguns valores podem vir com separador; a maioria vem "123456"
-		vClean := strings.ReplaceAll(v, ".", "")
-		vClean = strings.ReplaceAll(vClean, ",", "")
-		val, err := strconv.ParseInt(vClean, 10, 64)
-		if err != nil {
-			continue
-		}
-
-		return PopulationEstimate{Year: year, Value: val}, nil
+		return PopulationEstimate{
+			Year:  year,
+			Value: val,
+		}, nil
 	}
 
 	return PopulationEstimate{}, fmt.Errorf("no population estimate found for %s", municipalityIBGEID)
